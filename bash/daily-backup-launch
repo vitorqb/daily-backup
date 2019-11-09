@@ -1,0 +1,76 @@
+#!/bin/bash
+USAGE="$0"'
+Small wrapper around daily-backup so that is is easier to launch from a systemd service
+using only env vars.'
+
+# Ensure python prints are flushed
+export PYTHONUNBUFFERED="true"
+
+# Defaults dailu backup upload type to scp (backwards compatibility)
+DAILY_BACKUP_UPLOAD_TYPE="${DAILY_BACKUP_UPLOAD_TYPE:-scp}"
+
+# Ensure all needed variables are set
+COMMON_VARS=(DAILY_BACKUP_PASSWORD DAILY_BACKUP_FILES_FROM DAILY_BACKUP_EXCLUDE_FROM DAILY_BACKUP_LOCAL_OUTPUT_DIR DAILY_BACKUP_LOCAL_LOG_DIR DAILY_BACKUP_EMAIL_TO)
+SCP_VARS=(DAILY_BACKUP_REMOTE_OUTPUT_DIR DAILY_BACKUP_SSH_CONFIG_FILE)
+B2_VARS=(DAILY_BACKUP_B2_API_KEY DAILY_BACKUP_B2_API_KEY_ID DAILY_BACKUP_B2_BUCKET_NAME)
+
+case "$DAILY_BACKUP_UPLOAD_TYPE" in
+    scp)
+        VARS=("${COMMON_VARS[@]} ${SCP_VARS[@]}")
+        ;;
+    b2)
+        VARS=("${COMMON_VARS[@]} ${B@_VARS[@]}")
+        ;;
+    *)
+        { echo "ERROR: Invalid upload type" ; echo "$USAGE" ; } 1>&2
+        exit 1
+        ;;
+esac        
+
+for x in ${VARS[@]}
+do
+    if [ -z "${!x}" ]
+    then
+        { echo "Missing $x" ; echo "$USAGE" ; } 1>&2
+        exit 1
+    fi
+done
+
+# Constants
+DATE="$(date '+%Y-%m-%dT%H:%M:%S')"
+FILES_FROM="${DAILY_BACKUP_FILES_FROM}"
+EXCLUDE_FROM="${DAILY_BACKUP_EXCLUDE_FROM}"
+OUTPUT="${DAILY_BACKUP_LOCAL_OUTPUT_DIR}/${DATE}.tar.gz.gpg"
+REMOTE_OUTPUT="${DAILY_BACKUP_REMOTE_OUTPUT_DIR}/${DATE}.tar.gz.gpg"
+TAR_LOG_FILE="${DAILY_BACKUP_LOCAL_LOG_DIR}/${DATE}.log"
+SSH_CONFIG_FILE="${DAILY_BACKUP_SSH_CONFIG_FILE}"
+EMAIL_TO="${DAILY_BACKUP_EMAIL_TO}"
+
+cat <<EOF
+
+==============================
+Running with config:
+DATE="$DATE"
+FILES_FROM="$FILES_FROM"
+EXCLUDE_FROM="$EXCLUDE_FROM"
+OUTPUT="$OUTPUT"
+REMOTE_OUTPUT="$REMOTE_OUTPUT"
+TAR_LOG_FILE="$TAR_LOG_FILE"
+SSH_CONFIG_FILE="$SSH_CONFIG_FILE"
+EMAIL_TO="$EMAIL_TO"
+DAILY_BACKUP_UPLOAD_TYPE="$DAILY_BACKUP_UPLOAD_TYPE"
+DAILY_BACKUP_B2_BUCKET_NAME="$DAILY_BACKUP_B2_BUCKET_NAME"
+==============================
+
+EOF
+
+/usr/bin/daily-backup -f "$FILES_FROM" -e "$EXCLUDE_FROM" -o "$OUTPUT" -l "$TAR_LOG_FILE"
+case "$DAILY_BACKUP_UPLOAD_TYPE" in
+    scp)
+        /usr/bin/daily-backup-upload -- -F "$SSH_CONFIG_FILE" "$OUTPUT" "$REMOTE_OUTPUT"
+        ;;
+    b2)
+        /usr/bin/daily-backup-upload-backblaze-b2.py -f="$OUTPUT" -b="$DAILY_BACKUP_B2_BUCKET_NAME"
+        ;;
+esac
+/usr/bin/daily-backup-send-email -t "$EMAIL_TO" -a "$TAR_LOG_FILE"

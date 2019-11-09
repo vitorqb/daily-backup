@@ -1,0 +1,61 @@
+#!/bin/bash
+USAGE="$0"' [-w WAIT_BETWEEN] [-m MAX_RETIRES] -- $SCP_ARGS
+Uploads the daily-backup to a server using scp.
+Retry every `WAIT_BETWEEM` seconds with a max of `MAX_RETIRES` seconds.
+Passes all `SCP_ARGS` args to scp.'
+
+# Defaults
+WAIT_BETWEEN=30
+MAX_RETIRES=100
+
+# Parse
+SHORT='w:m:s:'
+OPTS="$(getopt --options $SHORT --name "$0" -- "$@")"
+! [ "$?" = 0 ] && echo "$USAGE" 1>&2 && exit 1
+eval set -- "$OPTS"
+while [[ "$#" -gt 0 ]]
+do
+    case "$1" in
+        -w)
+            WAIT_BETWEEN=="$2"
+            shift
+            shift
+            ;;
+        -m)
+            MAX_RETIRES="$2"
+            shift
+            shift
+            ;;
+        --)
+            # Leave $@ for scp
+            shift
+            break
+            ;;
+        *)
+            echo "$USAGE" 1>&2
+            exit 1
+    esac
+done
+
+COUNTER="1"
+SUCCESS="0"
+
+echo "Starting upload with: scp $@"
+while [ "$SUCCESS" = "0" ]
+do
+    echo "Attempt: $COUNTER"
+    if scp $@
+    then
+        SUCCESS=1
+    elif [[ "$COUNTER" -ge "$MAX_RETIRES" ]]
+    then
+         echo "Max attempts reached!" 1>&2
+         exit 1
+    else
+        echo "Failed! Sleeping..."
+        COUNTER="$((COUNTER+1))"
+        sleep "$WAIT_BETWEEN"
+    fi
+done
+
+        

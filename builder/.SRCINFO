@@ -1,0 +1,16 @@
+pkgbase = daily-backup
+	pkgdesc = Daily backup utilities for vitor
+	pkgver = 0.1.1
+	pkgrel = 1
+	arch = any
+	license = GPL
+	depends = python3
+	depends = curl
+	depends = gnupg
+	optdepends = backblaze-b2
+	optdepends = openssh
+	source = daily-backup-0.1.1.tar
+	md5sums = af08b49afd4ed7fc60e1218eb5686f88
+
+pkgname = daily-backup
+

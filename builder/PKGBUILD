@@ -1,0 +1,48 @@
+# Maintainer: Vitor Barbosa <vitorqb@gmail.com>
+pkgname=daily-backup
+pkgver=0.1.1
+pkgrel=1
+epoch=
+pkgdesc="Daily backup utilities for vitor"
+arch=(any)
+url=""
+license=('GPL')
+groups=()
+depends=("python3" "curl" "gnupg")
+makedepends=()
+checkdepends=()
+optdepends=("backblaze-b2" "openssh")
+provides=()
+conflicts=()
+replaces=()
+backup=()
+options=()
+install=
+changelog=
+source=("$pkgname-$pkgver.tar")
+noextract=()
+md5sums=('af08b49afd4ed7fc60e1218eb5686f88')
+validpgpkeys=()
+
+package() {
+    mkdir -p "$pkgdir/usr/bin/"
+    mkdir -p "$pkgdir/etc/systemd/system/"
+
+    cp "$srcdir/bash/daily-backup" "$pkgdir/usr/bin/daily-backup"
+    chmod +x "$pkgdir/usr/bin/daily-backup"
+
+    cp "$srcdir/bash/daily-backup-upload" "$pkgdir/usr/bin/daily-backup-upload"
+    chmod +x "$pkgdir/usr/bin/daily-backup-upload"
+    
+    cp "$srcdir/bash/daily-backup-launch" "$pkgdir/usr/bin/daily-backup-launch"
+    chmod +x "$pkgdir/usr/bin/daily-backup-launch"
+    
+    cp "$srcdir/bash/daily-backup-send-email" "$pkgdir/usr/bin/daily-backup-send-email"
+    chmod +x "$pkgdir/usr/bin/daily-backup-send-email"
+    
+    cp "$srcdir/python/daily-backup-upload-backblaze-b2.py" "$pkgdir/usr/bin/daily-backup-upload-backblaze-b2.py"
+    chmod +x "$pkgdir/usr/bin/daily-backup-upload-backblaze-b2.py"
+    
+    cp "$srcdir/systemctl/daily-backup.service" "$pkgdir/etc/systemd/system/daily-backup.service"
+    cp "$srcdir/systemctl/daily-backup.timer" "$pkgdir/etc/systemd/system/daily-backup.timer"
+}

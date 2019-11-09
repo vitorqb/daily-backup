@@ -1,0 +1,103 @@
+#!/bin/bash
+USAGE="$0"' [-f $FILES_FROM] [-e $EXCLUDE_FROM] [-o $OUTPUT] [-l $TAR_LOG_FILE]
+Runs a daily backup using tar and encrypt it using gpg.
+
+$FROM_FILES Must be a file with a list of paths to include on the backup (see
+tar opt `--from-from`).
+
+$EXCLUDE_FROM Must be a file with a list of paths to exclude (see tar opt
+`--exclude-from`).
+
+$OUTPUT Must be a path to a file where the backup will be saved. The dir and its parents
+are created on demand.
+
+$TAR_LOG_FILE Is optional and indicates a file to keep the backup logs.
+
+This command reads the password used to encrypt from the env var DAILY_BACKUP_PASSWORD.
+'
+
+# getopt
+SHORT='f:e:o:l:'
+OPTS="$(getopt --options $SHORT --name "$0" -- "$@")"
+! [ "$?" = 0 ] && echo "$USAGE" 1>&2 && exit 1
+eval set -- "$OPTS"
+
+# Defaults
+TAR_LOG_FILE=/dev/null
+
+# Parses params
+while [[ "$#" -gt 0 ]]
+do
+    key="$1"
+    case "$key" in
+        -f)
+            FILES_FROM="$2"
+            shift
+            shift
+            ;;
+        -e)
+            EXCLUDE_FROM="$2"
+            shift
+            shift
+            ;;
+        -o)
+            OUTPUT="$2"
+            shift
+            shift
+            ;;
+        -l)
+            TAR_LOG_FILE="$2"
+            shift
+            shift
+            ;;
+        --)
+            shift
+            ;;
+        *)
+            echo "$USAGE" 1>&2
+            exit 1
+    esac
+done
+
+# Required args
+if [ -z $DAILY_BACKUP_PASSWORD ]
+then
+    { echo "ERROR: Missing env var DAILY_BACKUP_PASSWORD" ; echo "$USAGE" ; } 1>&2;
+    exit 1
+fi
+
+if [ -z $FILES_FROM ]
+then
+    { echo "ERROR: Missing 'FILES_FROM'" ; echo "$USAGE" ; } 1>&2;
+    exit 1
+fi
+
+if [ -z $EXCLUDE_FROM ]
+then
+    { echo "ERROR: Missing 'EXCLUDE_FROM'" ; echo "$USAGE" ; } 1>&2;
+    exit 1
+fi
+
+if [ -z $OUTPUT ]
+then
+    { echo "ERROR: Missing 'OUTPUT'" ; echo "$USAGE" ; } 1>&2;
+    exit 1
+fi
+
+# Stops on errors
+set -e
+
+# Globals
+TMPFILE="$(mktemp)"
+trap "rm -f $TMPFILE" EXIT
+DESTFOLDER="$(dirname ${OUTPUT})"
+mkdir -p "${DESTFOLDER}"
+mkdir -p "$(dirname "$TAR_LOG_FILE")"
+
+# Runs tar and gpg. Note: We can't really stop on errors here. Tar may
+# fail for a single file, but we still want the backup.
+echo "Running tar..."
+set +e; tar --checkpoint=10000 --index-file=$TAR_LOG_FILE -vzcf $TMPFILE --exclude-from $EXCLUDE_FROM --files-from $FILES_FROM; set -e
+
+echo "Running gpg..."
+echo "$DAILY_BACKUP_PASSWORD" | gpg --output $OUTPUT --batch --yes --passphrase-fd 0 -c $TMPFILE

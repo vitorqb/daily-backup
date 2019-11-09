@@ -1,0 +1,124 @@
+* Daily Backup
+** Overview
+
+   This is a set of scripts and related files I use to make a daily encrypted backup
+   of a selected set of files and upload it to a remote server.
+
+   Here are the programs/dependencies I use:
+
+   | Name           | Description                                           | Notes              |
+   |----------------+-------------------------------------------------------+--------------------|
+   | tar            | Used to created compressed backup file.               |                    |
+   | gpg            | Used to encrypt the backup file with a password.      |                    |
+   | scp            | Used to upload the backup file to a remote server.    | or python3 + b2sdk |
+   | python3+b2sdk  | Used to upload the backup file to a backblaze bucket. | or scp             |
+   | curl + mailgun | Used to send an email after the backup is completed.  |                    |
+
+** Installing
+
+   **If you use arch:**
+
+#+begin_example
+cd builder && makepkg -si
+#+end_example
+
+   **Full Instalation**
+
+   Here we use symlinks, but you can copy as well if you prefer.
+
+   - Create a symlink to the executables in /usr/bin:
+
+#+begin_src bash
+sudo ln -s bash/daily-backup /usr/bin/daily-backup
+sudo ln -s bash/daily-backup-upload /usr/bin/daily-backup-upload
+sudo ln -s bash/daily-backup-launch /usr/bin/daily-backup-launch
+sudo ln -s bash/daily-backup-send-email /usr/bin/daily-backup-send-email
+sudo ln -s python/daily-backup-upload-backblaze-b2.py /usr/bin/daily-backup-upload-backblaze-b2.py
+
+sudo ln -s {USER_HOME}/projects/daily-backup/systemctl/daily-backup.service /etc/systemd/system/daily-backup.service
+sudo ln -s {USER_HOME}/projects/daily-backup/systemctl/daily-backup.timer /etc/systemd/system/daily-backup.timer
+#+end_src
+
+** Configuring
+
+   Create a file in ={USER_HOME}/.config/daily-backup/env=
+
+#+begin_example
+# file:{USER_HOME}/.config/daily-backup/env
+DAILY_BACKUP_PASSWORD="SUPER_SECRET_PASSWORD"
+DAILY_BACKUP_FILES_FROM={USER_HOME}/.config/daily-backup/files
+DAILY_BACKUP_EXCLUDE_FROM={USER_HOME}/.config/daily-backup/excludes
+DAILY_BACKUP_LOCAL_OUTPUT_DIR={USER_HOME}/daily-backup/output
+DAILY_BACKUP_LOCAL_LOG_DIR={USER_HOME}/daily-backup/log
+DAILY_BACKUP_EMAIL_TO=mycool@email.com
+DAILY_BACKUP_MAILGUN_API_KEY="SUPER_SECRET_API_KEY"
+DAILY_BACKUP_MAILGUN_DOMAIN="MAIL_GUN_DOMAIN"
+
+# If you use scp
+DAILY_BAKCUP_UPLOAD_TYPE="scp"
+DAILY_BACKUP_REMOTE_OUTPUT_DIR=<REMOTE_USER>@<REMOTE_IP>:/home/vbarbosa/daily-backup/output
+DAILY_BACKUP_SSH_CONFIG_FILE={USER_HOME}/.ssh/config
+
+# If you use backblaze (b2)
+DAILY_BACKUP_UPLOAD_TYPE="b2"
+DAILY_BACKUP_B2_API_KEY="SECRET API KEY"
+DAILY_BACKUP_B2_API_KEY_ID="SECRET API KEY ID"
+DAILY_BACKUP_B2_BUCKET_NAME="daily-backup-personal"
+#+end_example
+
+   Since they contain raw passwords, it is recomendable for them to be
+   nor readable by other users. For example:
+
+#+begin_src bash
+sudo chown root {USER_HOME}/.config/daily-backup/env
+sudo chmod 700 {USER_HOME}/.config/daily-backup/env
+#+end_src
+
+   Now create ~{USER_HOME}/.config/daily-backup/files~ with the list of files to backup
+
+#+begin_example
+# file:{USER_HOME}/.config/daily-backup/files
+{USER_HOME}/git
+{USER_HOME}/projects
+{USER_HOME}/.config
+#+end_example
+
+   And create ~{USER_HOME}/.config/daily-backup/exclude~ with list of files to exclude
+
+#+begin_example
+# file:{USER_HOME}/.config/daily-backup/excludes
+{USER_HOME}/.config/google-chrome/*
+#+end_example
+
+   Edit ~/etc/systemd/system/daily-backup.service~ and change the paths to your user's home path:
+
+#+begin_example
+[Unit]
+Description=Daily Backup For {USER}
+
+[Service]
+EnvironmentFile={USER_HOME}/.config/daily-backup/env
+ExecStart=/usr/bin/daily-backup-launch
+#+end_example
+
+   Enable and start the timer
+
+#+begin_src bash
+sudo systemctl enable daily-backup.timer && sudo systemctl start daily-backup.timer
+#+end_src
+
+   If you are using scp, make sure you can connect with ssh to the
+   server which will receive the backup. I have something like this:
+
+#+begin_example
+# file:{USER_HOME}/.ssh/config
+HOST <HOST_IP_ADDRESS>
+  IdentityFile {USER_HOME}/.ssh/id_rsa
+  UserKnownHostsFile {USER_HOME}/.ssh/known_hosts
+#+end_example
+
+   Now you can try to run and see the logs:
+
+#+begin_example
+sudo systemctl start daily-backup && sudo journalctl --unit daily-backup --follow
+#+end_example
