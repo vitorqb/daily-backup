@@ -9,8 +9,8 @@ pkgbase = daily-backup
 	depends = gnupg
 	optdepends = backblaze-b2
 	optdepends = openssh
-	source = daily-backup-0.1.1.tar
-	md5sums = af08b49afd4ed7fc60e1218eb5686f88
+	source = https://f000.backblazeb2.com/file/daily-backup-releases/daily-backup-0.1.1.tar.gz
+	md5sums = a936a3b5dcf7ae08d3d40cc64503c1dc
 
 pkgname = daily-backup
 
