@@ -1,6 +1,6 @@
 # Maintainer: Vitor Barbosa <vitorqb@gmail.com>
 pkgname=daily-backup
-pkgver=0.1.1
+pkgver=0.1.2
 pkgrel=1
 epoch=
 pkgdesc="Daily backup utilities for vitor"
@@ -19,9 +19,9 @@ backup=()
 options=()
 install=
 changelog=
-source=("https://f000.backblazeb2.com/file/daily-backup-releases/daily-backup-0.1.1.tar.gz")
+source=("https://f000.backblazeb2.com/file/daily-backup-releases/$pkgname-$pkgver.tar.gz")
 noextract=()
-md5sums=('a936a3b5dcf7ae08d3d40cc64503c1dc')
+md5sums=('8677f5d8da7c230e8594947b03ef1908')
 validpgpkeys=()
 
 package() {
