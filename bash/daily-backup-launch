@@ -45,11 +45,14 @@ REMOTE_OUTPUT="${DAILY_BACKUP_REMOTE_OUTPUT_DIR}/${DATE}.tar.gz.gpg"
 TAR_LOG_FILE="${DAILY_BACKUP_LOCAL_LOG_DIR}/${DATE}.log"
 SSH_CONFIG_FILE="${DAILY_BACKUP_SSH_CONFIG_FILE}"
 EMAIL_TO="${DAILY_BACKUP_EMAIL_TO}"
+VERSION="$(daily-backup version)"
 
 cat <<EOF
 
 ==============================
+Daily Backup (version: "$VERSION") 
 Running with config:
+
 DATE="$DATE"
 FILES_FROM="$FILES_FROM"
 EXCLUDE_FROM="$EXCLUDE_FROM"
@@ -64,13 +67,13 @@ DAILY_BACKUP_B2_BUCKET_NAME="$DAILY_BACKUP_B2_BUCKET_NAME"
 
 EOF
 
-/usr/bin/daily-backup -f "$FILES_FROM" -e "$EXCLUDE_FROM" -o "$OUTPUT" -l "$TAR_LOG_FILE"
+/usr/bin/daily-backup run -f "$FILES_FROM" -e "$EXCLUDE_FROM" -o "$OUTPUT" -l "$TAR_LOG_FILE"
 case "$DAILY_BACKUP_UPLOAD_TYPE" in
     scp)
-        /usr/bin/daily-backup-upload -- -F "$SSH_CONFIG_FILE" "$OUTPUT" "$REMOTE_OUTPUT"
+        /usr/bin/daily-backup upload -- -F "$SSH_CONFIG_FILE" "$OUTPUT" "$REMOTE_OUTPUT"
         ;;
     b2)
-        /usr/bin/daily-backup-upload-backblaze-b2.py -f="$OUTPUT" -b="$DAILY_BACKUP_B2_BUCKET_NAME"
+        /usr/bin/daily-backup upload-backblaze-b2 -f="$OUTPUT" -b="$DAILY_BACKUP_B2_BUCKET_NAME"
         ;;
 esac
-/usr/bin/daily-backup-send-email -t "$EMAIL_TO" -a "$TAR_LOG_FILE"
+/usr/bin/daily-backup send-email -t "$EMAIL_TO" -a "$TAR_LOG_FILE"

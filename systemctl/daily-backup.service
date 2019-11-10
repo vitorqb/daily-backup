@@ -3,4 +3,4 @@ Description=Daily Backup For Vitor
 
 [Service]
 EnvironmentFile=/home/vitor/.config/daily-backup/env
-ExecStart=/usr/bin/daily-backup-launch
+ExecStart=/usr/bin/daily-backup launch
