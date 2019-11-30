@@ -34,31 +34,18 @@ done
 # Script
 set -e
 
-mkdir -p "$PREFIX/usr/bin/"
-mkdir -p "$PREFIX/usr/lib/daily-backup/"
-mkdir -p "$PREFIX/etc/systemd/system/"
+# Executables
+install -D -m +x "bash/entrypoint" "$PREFIX/usr/bin/daily-backup"
+install -D -m +x "bash/daily-backup-run" "$PREFIX/usr/lib/daily-backup/daily-backup-run"
+install -D -m +x "bash/daily-backup-upload" "$PREFIX/usr/lib/daily-backup/daily-backup-upload"
+install -D -m +x "bash/daily-backup-launch" "$PREFIX/usr/lib/daily-backup/daily-backup-launch"
+install -D -m +x "bash/daily-backup-send-email" "$PREFIX/usr/lib/daily-backup/daily-backup-send-email"
+install -D -m +x "bash/daily-backup-version" "$PREFIX/usr/lib/daily-backup/daily-backup-version"
+install -D -m +x "python/daily-backup-upload-backblaze-b2.py" "$PREFIX/usr/lib/daily-backup/daily-backup-upload-backblaze-b2.py"
 
-cp "bash/entrypoint" "$PREFIX/usr/bin/daily-backup"
-chmod +x "$PREFIX/usr/bin/daily-backup"
+# Systemd templates
+install -D "systemctl/daily-backup.service" "$PREFIX/usr/share/doc/daily-backup/systemd-templates/daily-backup.service"
+install -D "systemctl/daily-backup.timer" "$PREFIX/usr/share/doc/daily-backup/systemd-templates//daily-backup.timer"
 
-cp "bash/daily-backup-run" "$PREFIX/usr/lib/daily-backup/daily-backup-run"
-chmod +x "$PREFIX/usr/lib/daily-backup/daily-backup-run"
-
-cp "bash/daily-backup-upload" "$PREFIX/usr/lib/daily-backup/daily-backup-upload"
-chmod +x "$PREFIX/usr/lib/daily-backup/daily-backup-upload"
-
-cp "bash/daily-backup-launch" "$PREFIX/usr/lib/daily-backup/daily-backup-launch"
-chmod +x "$PREFIX/usr/lib/daily-backup/daily-backup-launch"
-
-cp "bash/daily-backup-send-email" "$PREFIX/usr/lib/daily-backup/daily-backup-send-email"
-chmod +x "$PREFIX/usr/lib/daily-backup/daily-backup-send-email"
-
-cp "bash/daily-backup-version" "$PREFIX/usr/lib/daily-backup/daily-backup-version"
-chmod +x "$PREFIX/usr/lib/daily-backup/daily-backup-version"
-
-cp "python/daily-backup-upload-backblaze-b2.py" "$PREFIX/usr/lib/daily-backup/daily-backup-upload-backblaze-b2.py"
-chmod +x "$PREFIX/usr/lib/daily-backup/daily-backup-upload-backblaze-b2.py"
-
-cp "systemctl/daily-backup.service" "$PREFIX/etc/systemd/system/daily-backup.service"
-cp "systemctl/daily-backup.timer" "$PREFIX/etc/systemd/system/daily-backup.timer"
-
+# Config examples
+install -D "config/env.example" "$PREFIX/usr/share/doc/daily-backup/env.example"

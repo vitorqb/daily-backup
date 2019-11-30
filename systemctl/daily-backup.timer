@@ -1,5 +1,5 @@
 [Unit]
-Description=Runs Daily Backup For Vitor
+Description=Runs Daily Backup For ${USER_NAME}
 
 [Timer]
 OnCalendar=daily

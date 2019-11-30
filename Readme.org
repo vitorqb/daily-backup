@@ -19,96 +19,82 @@
    **If you use arch:**
 
 #+begin_example
-cd builder && makepkg -si
+git clone git@github.com:vitorqb/PKGBUILDs.git && cd PKGBUILDs/daily-backup && makepkg -si
 #+end_example
 
    **Full Instalation**
 
-   Here we use symlinks, but you can copy as well if you prefer.
+   There is a install script that will install all files for a unix-like system.
 
-   - Create a symlink to the executables in /usr/bin:
-
-#+begin_src bash
-sudo ln -s bash/daily-backup /usr/bin/daily-backup
-sudo ln -s bash/daily-backup-upload /usr/bin/daily-backup-upload
-sudo ln -s bash/daily-backup-launch /usr/bin/daily-backup-launch
-sudo ln -s bash/daily-backup-send-email /usr/bin/daily-backup-send-email
-sudo ln -s python/daily-backup-upload-backblaze-b2.py /usr/bin/daily-backup-upload-backblaze-b2.py
-
-sudo ln -s {USER_HOME}/projects/daily-backup/systemctl/daily-backup.service /etc/systemd/system/daily-backup.service
-sudo ln -s {USER_HOME}/projects/daily-backup/systemctl/daily-backup.timer /etc/systemd/system/daily-backup.timer
-#+end_src
+#+begin_example
+./install
+#+end_example
 
 ** Configuring
 
-   Create a file in ={USER_HOME}/.config/daily-backup/env=
+   - Copy the example env configuration to your user home ~.config~
 
 #+begin_example
-# file:{USER_HOME}/.config/daily-backup/env
-DAILY_BACKUP_PASSWORD="SUPER_SECRET_PASSWORD"
-DAILY_BACKUP_FILES_FROM={USER_HOME}/.config/daily-backup/files
-DAILY_BACKUP_EXCLUDE_FROM={USER_HOME}/.config/daily-backup/excludes
-DAILY_BACKUP_LOCAL_OUTPUT_DIR={USER_HOME}/daily-backup/output
-DAILY_BACKUP_LOCAL_LOG_DIR={USER_HOME}/daily-backup/log
-DAILY_BACKUP_EMAIL_TO=mycool@email.com
-DAILY_BACKUP_MAILGUN_API_KEY="SUPER_SECRET_API_KEY"
-DAILY_BACKUP_MAILGUN_DOMAIN="MAIL_GUN_DOMAIN"
-
-# If you use scp
-DAILY_BAKCUP_UPLOAD_TYPE="scp"
-DAILY_BACKUP_REMOTE_OUTPUT_DIR=<REMOTE_USER>@<REMOTE_IP>:/home/vbarbosa/daily-backup/output
-DAILY_BACKUP_SSH_CONFIG_FILE={USER_HOME}/.ssh/config
-
-# If you use backblaze (b2)
-DAILY_BACKUP_UPLOAD_TYPE="b2"
-DAILY_BACKUP_B2_API_KEY="SECRET API KEY"
-DAILY_BACKUP_B2_API_KEY_ID="SECRET API KEY ID"
-DAILY_BACKUP_B2_BUCKET_NAME="daily-backup-personal"
+install -D /usr/share/doc/daily-backup/env.example ~/.config/daily-backup/env
 #+end_example
 
-   Since they contain raw passwords, it is recomendable for them to be
-   nor readable by other users. For example:
+   - Edit it with your favorite text editor and customize it for your needs.
+
+   - Since this file contains raw passwords, *I highly recommend setting restrictive permissions*
 
 #+begin_src bash
-sudo chown root {USER_HOME}/.config/daily-backup/env
-sudo chmod 700 {USER_HOME}/.config/daily-backup/env
+sudo chmod 700 ~/.config/daily-backup/env
 #+end_src
 
-   Now create ~{USER_HOME}/.config/daily-backup/files~ with the list of files to backup
+   - Now create a file with a list of files to be backed up. See tar ~--files-from~ option.
+     The file must be on the path set with ~DAILY_BACKUP_FILES_FROM~.
 
 #+begin_example
 # file:{USER_HOME}/.config/daily-backup/files
 {USER_HOME}/git
 {USER_HOME}/projects
 {USER_HOME}/.config
+# ...
 #+end_example
 
-   And create ~{USER_HOME}/.config/daily-backup/exclude~ with list of files to exclude
+   - Do the same for the files to ignore (see tar ~--exclude-from~). The path is determined
+     by ~DAILY_BACKUP_EXCLUDE_FROM~.
 
 #+begin_example
 # file:{USER_HOME}/.config/daily-backup/excludes
 {USER_HOME}/.config/google-chrome/*
 #+end_example
 
-   Edit ~/etc/systemd/system/daily-backup.service~ and change the paths to your user's home path:
+** Enabling systemd service and timer
+
+   We rely on systemd service and timer to run the backup daily.
+
+   - Copy the example systemd timer and service to the systemd services location:
+     
+#+begin_example
+install -D /usr/share/doc/daily-backup/systemd-templates/* /etc/systemd/system/
+#+end_example
+
+   - Edit each file substituting {USER} for the name of your user and ${USER_HOME} to the
+     full path to the user home.
 
 #+begin_example
 [Unit]
-Description=Daily Backup For {USER}
+Description=Daily Backup For Vitor
 
 [Service]
-EnvironmentFile={USER_HOME}/.config/daily-backup/env
-ExecStart=/usr/bin/daily-backup-launch
+EnvironmentFile=/home/vitor/.config/daily-backup/env
+ExecStart=/usr/bin/daily-backup launch
 #+end_example
 
-   Enable and start the timer
+   - Enable and start the timer
 
-#+begin_src bash
+#+begin_example
 sudo systemctl enable daily-backup.timer && sudo systemctl start daily-backup.timer
-#+end_src
+#+end_example
 
-   If you are using scp, make sure you can connect with ssh to the
-   server which will receive the backup. I have something like this:
+   - If you are using scp, make sure you can connect with ssh to the
+     server which will receive the backup. I have something like this:
 
 #+begin_example
 # file:{USER_HOME}/.ssh/config
@@ -117,8 +103,73 @@ HOST <HOST_IP_ADDRESS>
   UserKnownHostsFile {USER_HOME}/.ssh/known_hosts
 #+end_example
 
-   Now you can try to run and see the logs:
+   - Now you can try to run and see the logs:
 
 #+begin_example
 sudo systemctl start daily-backup && sudo journalctl --unit daily-backup --follow
 #+end_example
+
+** Options
+
+   Those are configuration variables from the config file:
+   
+   - DAILY_BACKUP_PASSWORD
+     
+     Password used to encrypt the backup with gpg.
+
+   - DAILY_BACKUP_FILES_FROM
+
+     A file passed to tar ~--files-from~ for running the backup. It decides which
+     folders/files will be included in the backup.
+
+   - DAILY_BACKUP_EXCLUDE_FROM
+
+     A file passed to tar ~--exclude-from~ when running the backup. It allows you
+     to ignore specific files or directories when running the backup.
+
+   - DAILY_BACKUP_LOCAL_OUTPUT_DIR
+
+     A (local) path where the backups will be stored in your computer.
+
+   - DAILY_BACKUP_LOCAL_LOG_DIR
+
+     A (local) path where the backups logs will be stored in your computer.
+
+   - DAILY_BACKUP_EMAIL_TO
+
+     An email address that will receive an email everytime the backup is run.
+
+   - DAILY_BACKUP_MAILGUN_API_KEY
+
+     [[https://www.mailgun.com/][Mailgun]] api key used to send emails.
+
+   - DAILY_BACKUP_MAILGUN_DOMAIN
+
+     [[https://www.mailgun.com/][Mailgun]] domain used to send emails.
+
+   - DAILY_BAKCUP_UPLOAD_TYPE
+
+     Either ~scp~ or ~b2~. Defines how to upload the backup to a remote server.
+
+   - DAILY_BACKUP_REMOTE_OUTPUT_DIR (DAILY_BAKCUP_UPLOAD_TYPE="scp")
+
+     An ssh-like path destination for the backups. Example:
+#+begin_example
+<REMOTE_USER>@<REMOTE_IP>:daily-backup/output
+#+end_example
+
+   - DAILY_BACKUP_SSH_CONFIG_FILE (DAILY_BAKCUP_UPLOAD_TYPE="scp")
+
+     The ssh config file used to access the server.
+
+   - DAILY_BACKUP_B2_API_KEY (DAILY_BAKCUP_UPLOAD_TYPE="b2")
+     
+     Secret api key for [[https://www.backblaze.com/][Backblaze]].
+
+   - DAILY_BACKUP_B2_API_KEY_ID (DAILY_BAKCUP_UPLOAD_TYPE="b2")
+
+     Secret api key id for [[https://www.backblaze.com/][Backblaze]].
+
+   - DAILY_BACKUP_B2_BUCKET_NAME (DAILY_BAKCUP_UPLOAD_TYPE="b2")
+
+     Name of the bucket where the generated backup will be stored.
