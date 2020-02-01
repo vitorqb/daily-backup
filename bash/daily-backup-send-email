@@ -65,13 +65,8 @@ do
 done
 
 # Helper functions
-function subject() {
-    echo "Your daily backup script ended."
-}
-
-function text() {
-    echo -e "$(subject)\n\nSee attached file for the tar log :)!"
-}
+function subject() { echo "Your daily backup script ended." ; }
+function text() { echo -e "$(subject)\n\nSee attached file for the tar log :)!" ;}
 
 # Script
 echo "Sending email..."

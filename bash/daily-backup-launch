@@ -6,7 +6,7 @@ using only env vars.'
 # Ensure python prints are flushed
 export PYTHONUNBUFFERED="true"
 
-# Defaults dailu backup upload type to scp (backwards compatibility)
+# Defaults daily backup upload type to scp (backwards compatibility)
 DAILY_BACKUP_UPLOAD_TYPE="${DAILY_BACKUP_UPLOAD_TYPE:-scp}"
 
 # Ensure all needed variables are set
