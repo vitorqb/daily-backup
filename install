@@ -41,7 +41,9 @@ install -D "bash/daily-backup-upload" "$PREFIX/usr/lib/daily-backup/daily-backup
 install -D "bash/daily-backup-launch" "$PREFIX/usr/lib/daily-backup/daily-backup-launch"
 install -D "bash/daily-backup-send-email" "$PREFIX/usr/lib/daily-backup/daily-backup-send-email"
 install -D "bash/daily-backup-version" "$PREFIX/usr/lib/daily-backup/daily-backup-version"
+install -D "bash/daily-backup-print-stats" "$PREFIX/usr/lib/daily-backup/daily-backup-print-stats"
 install -D "python/daily-backup-upload-backblaze-b2.py" "$PREFIX/usr/lib/daily-backup/daily-backup-upload-backblaze-b2.py"
+
 
 # Systemd templates
 install -D "systemctl/daily-backup.service" "$PREFIX/usr/share/doc/daily-backup/systemd-templates/daily-backup.service"

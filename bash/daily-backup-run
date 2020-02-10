@@ -16,6 +16,9 @@ $TAR_LOG_FILE Is optional and indicates a file to keep the backup logs.
 This command reads the password used to encrypt from the env var DAILY_BACKUP_PASSWORD.
 '
 
+# for tracking time (bash rocks hehe)!
+SECONDS=0
+
 # getopt
 SHORT='f:e:o:l:'
 OPTS="$(getopt --options $SHORT --name "$0" -- "$@")"
@@ -101,3 +104,10 @@ set +e; tar --checkpoint=10000 --index-file=$TAR_LOG_FILE -vzcf $TMPFILE --exclu
 
 echo "Running gpg..."
 echo "$DAILY_BACKUP_PASSWORD" | gpg --output $OUTPUT --batch --yes --passphrase-fd 0 -c $TMPFILE
+
+echo "Preparing statistics..."
+/usr/bin/daily-backup print-stats \
+                      --tar-file "$TMPFILE" \
+                      --encrypted-file "$OUTPUT" \
+                      --duration "$SECONDS" \
+                      >>"$TAR_LOG_FILE"

@@ -9,6 +9,7 @@ Command can be one of:
 - upload
 - upload-backblaze-b2
 - version
+- print-stats
 
 Use `command --help` for seeing the helper of each command.'
 
@@ -38,6 +39,10 @@ case "$COMMAND" in
 
     version)
         /usr/lib/daily-backup/daily-backup-version "$@"
+        ;;
+
+    print-stats)
+        /usr/lib/daily-backup/daily-backup-print-stats "$@"
         ;;
 
     *)

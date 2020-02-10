@@ -1,0 +1,77 @@
+#!/bin/bash
+USAGE="$0"' -t|--tar-file VAL -e|--encrypted-file VAL -d|--duration VAL
+Prints statistics for the backup.
+
+  -t|--tar-file)
+    The path to the `.tar.gz` backup file.
+
+  -e|--encrypted-file)
+    The path to the gpg encrypted file.
+
+  -d|--duration)
+    The number of seconds it took to create and encrypt the backup.'
+
+# getopt
+SHORT='ht:e:d:'
+LONG="help,tar-file:,encrypted-file:,duration:"
+OPTS="$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")"
+! [ "$?" = 0 ] && echo "$USAGE" 1>&2 && exit 1
+eval set -- "$OPTS"
+
+# Parses params
+while [[ "$#" -gt 0 ]]
+do
+    key="$1"
+    case "$key" in
+        -t|--tar-file)
+            TAR_FILE="$2"
+            shift
+            shift
+            ;;
+        -e|--encrypted-file)
+            ENCRYPTED_FILE="$2"
+            shift
+            shift
+            ;;
+        -d|--duration)
+            DURATION="$2"
+            shift
+            shift
+            ;;
+        -h|--help)
+            echo "$USAGE"
+            exit 0
+            ;;
+        --)
+            shift
+            ;;
+        *)
+            { echo "ERROR: Unknown argument" ; echo "$USAGE" ; } 1>&2
+            exit 1
+    esac
+done
+
+# Sanity Check
+function missing_arg() {
+    { echo "ERROR: Missing $1" ; echo "$USAGE" ; } 1>&2
+    exit 1
+}
+
+[ -z "$ENCRYPTED_FILE" ] && missing_arg "ENCRYPTED_FILE"
+[ -z "$TAR_FILE" ] && missing_arg "TAR_FILE"
+[ -z "$DURATION" ] && missing_arg "DURATION"
+
+# Script
+function file_size() { ls -lha "$1" | awk '{print($5)}' ; }
+function count_tar_files() { tar --list -zf "$1" | wc -l ; }
+
+cat <<EOF
+===== BEGIN STATS =====
+TAR_FILE=$TAR_FILE
+TAR_SIZE=$(file_size "$TAR_FILE")
+TAR_FILE_COUNT=$(count_tar_files "$TAR_FILE")
+ENCRYPTED_FILE=$ENCRYPTED_FILE
+ENCRYPTED_FILE_SIZE=$(file_size "$ENCRYPTED_FILE")
+DURATION="$(($DURATION / 60)) minutes and $(($DURATION % 60)) seconds"
+===== END STATS =====
+EOF
