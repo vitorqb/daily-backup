@@ -1,0 +1,22 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.3.0] - 2020-02-11
+
+### Added
+
+- Print basic stats for generated .tar and .gpg file in logs and in the email body.
+
+### Changes
+
+- (__BREAK INTERNAL API__) The API of `daily-backup send-email` has
+  changed. The old `-a` options was renamed to `-l`.
+
+
+[0.3.0]: https://github.com/vitorqb/daily-backup/releases/tag/v0.3.0
