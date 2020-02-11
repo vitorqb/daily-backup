@@ -1,17 +1,17 @@
 #!/bin/bash
-USAGE="$0"' [-t TO_EMAIL] [-a ATTACHMENT_FILE] [-w WAIT_BETWEEN] [-m MAX_RETIRES]
+USAGE="$0"' [-t TO_EMAIL] [-l LOG_FILE] [-w WAIT_BETWEEN] [-m MAX_RETIRES]
 Uses MailGun to send an email with the results of the daily backup.
 Depends on env var DAILY_BACKUP_MAILGUN_API_KEY and DAILY_BACKUP_MAILGUN_DOMAIN.
 
-[-t TO_EMAIL]        -> The destinatary email.
-[-a ATTACHMENT_FILE] -> The file to attach.
-[-w WAIT_BETWEEN]    -> Time to wait between two attempts to send the email. Default: 30.
-[-m MAX_RETIRES]     -> Max retries to send the email. Default: 30.'
+[-t TO_EMAIL]     -> The destinatary email.
+[-l LOG_FILE]     -> The file with the log, attached to the email.
+[-w WAIT_BETWEEN] -> Time to wait between two attempts to send the email. Default: 30.
+[-m MAX_RETIRES]  -> Max retries to send the email. Default: 30.'
 
 # 
 
 # getopt
-SHORT='f:t:a:w:m:'
+SHORT='f:t:l:w:m:'
 OPTS="$(getopt --options $SHORT --name "$0" -- "$@")"
 ! [ "$?" = 0 ] && echo "$USAGE" 1>&2 && exit 1
 eval set -- "$OPTS"
@@ -30,8 +30,8 @@ do
             shift
             shift
             ;;
-        -a)
-            ATTACHMENT="$2"
+        -l)
+            LOGFILE="$2"
             shift
             shift
             ;;
@@ -55,7 +55,7 @@ do
 done
 
 # Ensures params
-for x in TO_EMAIL ATTACHMENT WAIT_BETWEEN MAX_RETRIES DAILY_BACKUP_MAILGUN_API_KEY DAILY_BACKUP_MAILGUN_DOMAIN
+for x in TO_EMAIL LOGFILE WAIT_BETWEEN MAX_RETRIES DAILY_BACKUP_MAILGUN_API_KEY DAILY_BACKUP_MAILGUN_DOMAIN
 do
     if [ -z "${!x}" ]
     then
@@ -65,8 +65,14 @@ do
 done
 
 # Helper functions
+function print_stats_from_log() {
+    sed -rn '/===== BEGIN STATS =====/,/===== END STATS =====/ p' "$1"
+}
 function subject() { echo "Your daily backup script ended." ; }
-function text() { echo -e "$(subject)\n\nSee attached file for the tar log :)!" ;}
+function text() {
+    echo -e "$(subject)\n\nSee attached file for the tar log, and below for some stats :)\n\n"
+    print_stats_from_log "$LOGFILE"
+}
 
 # Script
 echo "Sending email..."
@@ -81,7 +87,7 @@ do
            -F "to=$TO_EMAIL" \
            -F "subject=$(subject)" \
            -F "text=$(text)" \
-           -F "attachment=@${ATTACHMENT}" \
+           -F "attachment=@${LOGFILE}" \
            "https://api.mailgun.net/v3/${DAILY_BACKUP_MAILGUN_DOMAIN}/messages"
     then
         SUCCESS='1'

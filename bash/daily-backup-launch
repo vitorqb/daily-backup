@@ -76,4 +76,4 @@ case "$DAILY_BACKUP_UPLOAD_TYPE" in
         /usr/bin/daily-backup upload-backblaze-b2 -f="$OUTPUT" -b="$DAILY_BACKUP_B2_BUCKET_NAME"
         ;;
 esac
-/usr/bin/daily-backup send-email -t "$EMAIL_TO" -a "$TAR_LOG_FILE"
+/usr/bin/daily-backup send-email -t "$EMAIL_TO" -l "$TAR_LOG_FILE"
