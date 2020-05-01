@@ -9,7 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+## [1.0.0] - 2020-05-01
+
+### Added
+
 - Adds feature to cleanup local backup folder on every run.
+
+### Changes
+
+- (__BREAKING__) The files are now stores with a `DAILY_BACKUP__` prefix. This means
+  that if before we had `2020-04-23T07:58:03.tar.gz.gpg` now we have 
+  `DAILY_BACKUP__2020-04-23T07:58:03.tar.gz.gpg`.
 	
 ## [0.3.0] - 2020-02-11
 
@@ -24,3 +34,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 [0.3.0]: https://github.com/vitorqb/daily-backup/releases/tag/v0.3.0
+[1.0.0]: https://github.com/vitorqb/daily-backup/releases/tag/v1.0.0
