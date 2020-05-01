@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+## [1.1.0] - 2020-05-01
+
+### Added
+
 - __Compress the log file before sending it by email__.  
   Because `mailgun` has a 25Mb limit on size, we now compress the file with tar and
   gzip before sending it by email.
@@ -39,3 +43,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [0.3.0]: https://github.com/vitorqb/daily-backup/releases/tag/v0.3.0
 [1.0.0]: https://github.com/vitorqb/daily-backup/releases/tag/v1.0.0
+[1.1.0]: https://github.com/vitorqb/daily-backup/releases/tag/v1.1.0
