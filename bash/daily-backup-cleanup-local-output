@@ -1,0 +1,63 @@
+#!/bin/bash
+USAGE="$0"' -d VAL [-n VAL]
+Cleans the `n` oldest backup from a local folder matching the daily backup pattern.
+
+-d)
+  The directory from where to clean.
+
+-n)
+  How many backups TO KEEP. Defaults to 10.'
+
+
+# Arg parsing
+# getopt
+SHORT='hd:n:'
+OPTS="$(getopt --options $SHORT --name "$0" -- "$@")"
+! [ "$?" = 0 ] && echo "$USAGE" 1>&2 && exit 1
+eval set -- "$OPTS"
+
+
+# Parses params
+while [[ "$#" -gt 0 ]]
+do
+    key="$1"
+    case "$key" in
+        -h)
+            echo "$USAGE"
+            exit 0
+            ;;
+        -d)
+            DIRECTORY="$2"
+            shift
+            shift
+            ;;
+        -n)
+            KEEP_NUM="$2"
+            shift
+            shift
+            ;;
+        --)
+            shift
+            ;;
+        *)
+            echo "$USAGE" 1>&2
+            exit 1
+    esac
+done
+
+# Defaults
+KEEP_NUM="${KEEP_NUM:-10}"
+
+# Sanity Checks
+if [ -z $DIRECTORY ]
+then
+    { echo "ERROR: Missing DIRECTORY" ; echo "$USAGE" ; } >&2
+    exit 1
+fi
+
+
+# Script
+ls "$DIRECTORY" \
+    | grep -oP '^DAILY_BACKUP__.*\.tar\.gz\.gpg$' \
+    | head -n "-${KEEP_NUM}" \
+    | xargs -I'{}' 'rm' '-r' '-f' '-v' "${DIRECTORY}/{}" 

@@ -35,13 +35,14 @@ done
 set -e
 
 # Executables
-install -D "bash/entrypoint" "$PREFIX/usr/bin/daily-backup"
+install -D "bash/daily-backup" "$PREFIX/usr/bin/daily-backup"
 install -D "bash/daily-backup-run" "$PREFIX/usr/lib/daily-backup/daily-backup-run"
 install -D "bash/daily-backup-upload" "$PREFIX/usr/lib/daily-backup/daily-backup-upload"
 install -D "bash/daily-backup-launch" "$PREFIX/usr/lib/daily-backup/daily-backup-launch"
 install -D "bash/daily-backup-send-email" "$PREFIX/usr/lib/daily-backup/daily-backup-send-email"
 install -D "bash/daily-backup-version" "$PREFIX/usr/lib/daily-backup/daily-backup-version"
 install -D "bash/daily-backup-print-stats" "$PREFIX/usr/lib/daily-backup/daily-backup-print-stats"
+install -D "bash/daily-backup-cleanup-local-output" "$PREFIX/usr/lib/daily-backup/daily-backup-cleanup-local-output"
 install -D "python/daily-backup-upload-backblaze-b2.py" "$PREFIX/usr/lib/daily-backup/daily-backup-upload-backblaze-b2.py"
 
 

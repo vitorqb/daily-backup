@@ -157,6 +157,19 @@ sudo systemctl start daily-backup && sudo journalctl --unit daily-backup --follo
 
      A (local) path where the backups logs will be stored in your computer.
 
+   - *DAILY_BACKUP_SHOULD_CLEANUP_LOCAL_FOLDER*
+     
+     If set to "1", cleans old backups from the local output folder. The number
+     of backup files to keep is controlled by DAILY_BACKUP_LOCAL_NUM_OF_FILES_TO_KEEP.
+     Defaults to "", which means no cleanup.
+
+   - *DAILY_BACKUP_LOCAL_NUM_OF_FILES_TO_KEEP*
+
+     The number of local backups to keep. Only has effect if 
+     DAILY_BACKUP_SHOULD_CLEANUP_LOCAL_FOLDER=1. *Defaults to 10*.
+     Example: if set to 10, we keep the 10 most recent backup files every time
+     the cleanup is run.
+
    - *DAILY_BACKUP_EMAIL_TO*
 
      An email address that will receive an email everytime the backup is run.

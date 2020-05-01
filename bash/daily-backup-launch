@@ -3,16 +3,93 @@ USAGE="$0"'
 Small wrapper around daily-backup so that is is easier to launch from a systemd service
 using only env vars.'
 
+# 
+# Helper fns and constants
+#
+
+DAILY_BACKUP="$(which daily-backup)"
+
 # Ensure python prints are flushed
 export PYTHONUNBUFFERED="true"
 
+# Exits in case of error
+function exit_with_err() {
+    echo "Exitting with error!" >&2
+    exit 1
+}
+
+# Runs the backup.
+function run_backup() {
+    echo -e "\n=> Running backup...\n"
+    $DAILY_BACKUP run -f "$FILES_FROM" -e "$EXCLUDE_FROM" -o "$OUTPUT" -l "$TAR_LOG_FILE"
+}
+
+# Uploads the backup using scp
+function run_upload_scp() {
+    echo -e "\n=> Uploading using scp...\n"
+    $DAILY_BACKUP upload -- -F "$SSH_CONFIG_FILE" "$OUTPUT" "$REMOTE_OUTPUT"
+}
+
+# Uploads the backup using backblaze b2
+function run_upload_b2() {
+    echo -e "\n=> Uploading using b2...\n"
+    $DAILY_BACKUP upload-backblaze-b2 -f="$OUTPUT" -b="$DAILY_BACKUP_B2_BUCKET_NAME"
+}
+
+# Uploads the backup dispatching on DAILY_BACKUP_UPLOAD_TYPE
+function run_upload() {
+    case "$DAILY_BACKUP_UPLOAD_TYPE" in
+        scp)
+            run_upload_scp
+            ;;
+        b2)
+            run_upload_b2
+            ;;
+    esac
+}
+
+# Runs the local cleanup
+function run_local_cleanup() {
+    echo -e "\n=> Cleaning local backup folder...\n"
+    $DAILY_BACKUP \
+        cleanup-local-output \
+        -d "$DAILY_BACKUP_LOCAL_OUTPUT_DIR" \
+        -n "$DAILY_BACKUP_LOCAL_NUM_OF_FILES_TO_KEEP"
+}
+
+# Sends the email on completion
+function send_email() {
+    echo -e "\n=> Sending email...\n"
+    $DAILY_BACKUP send-email -t "$EMAIL_TO" -l "$TAR_LOG_FILE"
+}
+
+
+#
+# Script
+#
 # Defaults daily backup upload type to scp (backwards compatibility)
 DAILY_BACKUP_UPLOAD_TYPE="${DAILY_BACKUP_UPLOAD_TYPE:-scp}"
 
 # Ensure all needed variables are set
-COMMON_VARS=(DAILY_BACKUP_PASSWORD DAILY_BACKUP_FILES_FROM DAILY_BACKUP_EXCLUDE_FROM DAILY_BACKUP_LOCAL_OUTPUT_DIR DAILY_BACKUP_LOCAL_LOG_DIR DAILY_BACKUP_EMAIL_TO)
-SCP_VARS=(DAILY_BACKUP_REMOTE_OUTPUT_DIR DAILY_BACKUP_SSH_CONFIG_FILE)
-B2_VARS=(DAILY_BACKUP_B2_API_KEY DAILY_BACKUP_B2_API_KEY_ID DAILY_BACKUP_B2_BUCKET_NAME)
+COMMON_VARS=(
+    DAILY_BACKUP_PASSWORD
+    DAILY_BACKUP_FILES_FROM
+    DAILY_BACKUP_EXCLUDE_FROM
+    DAILY_BACKUP_LOCAL_OUTPUT_DIR
+    DAILY_BACKUP_LOCAL_LOG_DIR
+    DAILY_BACKUP_EMAIL_TO
+)
+
+SCP_VARS=(
+    DAILY_BACKUP_REMOTE_OUTPUT_DIR
+    DAILY_BACKUP_SSH_CONFIG_FILE
+)
+
+B2_VARS=(
+    DAILY_BACKUP_B2_API_KEY
+    DAILY_BACKUP_B2_API_KEY_ID
+    DAILY_BACKUP_B2_BUCKET_NAME
+)
 
 case "$DAILY_BACKUP_UPLOAD_TYPE" in
     scp)
@@ -40,8 +117,8 @@ done
 DATE="$(date '+%Y-%m-%dT%H:%M:%S')"
 FILES_FROM="${DAILY_BACKUP_FILES_FROM}"
 EXCLUDE_FROM="${DAILY_BACKUP_EXCLUDE_FROM}"
-OUTPUT="${DAILY_BACKUP_LOCAL_OUTPUT_DIR}/${DATE}.tar.gz.gpg"
-REMOTE_OUTPUT="${DAILY_BACKUP_REMOTE_OUTPUT_DIR}/${DATE}.tar.gz.gpg"
+OUTPUT="${DAILY_BACKUP_LOCAL_OUTPUT_DIR}/DAILY_BACKUP__${DATE}.tar.gz.gpg"
+REMOTE_OUTPUT="${DAILY_BACKUP_REMOTE_OUTPUT_DIR}/DAILY_BACKUP__${DATE}.tar.gz.gpg"
 TAR_LOG_FILE="${DAILY_BACKUP_LOCAL_LOG_DIR}/${DATE}.log"
 SSH_CONFIG_FILE="${DAILY_BACKUP_SSH_CONFIG_FILE}"
 EMAIL_TO="${DAILY_BACKUP_EMAIL_TO}"
@@ -63,17 +140,16 @@ SSH_CONFIG_FILE="$SSH_CONFIG_FILE"
 EMAIL_TO="$EMAIL_TO"
 DAILY_BACKUP_UPLOAD_TYPE="$DAILY_BACKUP_UPLOAD_TYPE"
 DAILY_BACKUP_B2_BUCKET_NAME="$DAILY_BACKUP_B2_BUCKET_NAME"
+DAILY_BACKUP_SHOULD_CLEANUP_LOCAL_FOLDER="$DAILY_BACKUP_SHOULD_CLEANUP_LOCAL_FOLDER"
+DAILY_BACKUP_LOCAL_NUM_OF_FILES_TO_KEEP="$DAILY_BACKUP_LOCAL_NUM_OF_FILES_TO_KEEP"
 ==============================
 
 EOF
 
-/usr/bin/daily-backup run -f "$FILES_FROM" -e "$EXCLUDE_FROM" -o "$OUTPUT" -l "$TAR_LOG_FILE"
-case "$DAILY_BACKUP_UPLOAD_TYPE" in
-    scp)
-        /usr/bin/daily-backup upload -- -F "$SSH_CONFIG_FILE" "$OUTPUT" "$REMOTE_OUTPUT"
-        ;;
-    b2)
-        /usr/bin/daily-backup upload-backblaze-b2 -f="$OUTPUT" -b="$DAILY_BACKUP_B2_BUCKET_NAME"
-        ;;
-esac
-/usr/bin/daily-backup send-email -t "$EMAIL_TO" -l "$TAR_LOG_FILE"
+run_backup || exit_with_err
+run_upload || exit_with_err
+if [ "$DAILY_BACKUP_SHOULD_CLEANUP_LOCAL_FOLDER" = 1 ]
+then
+    run_local_cleanup || exit_with_err
+fi
+send_email || exit_with_err

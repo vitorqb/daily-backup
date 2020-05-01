@@ -1,0 +1,61 @@
+#!/bin/bash
+USAGE="$0"' command [options...]
+Entrypoint for daily backup.
+
+Command can be one of:
+- run
+- launch
+- send-email
+- upload
+- upload-backblaze-b2
+- cleanup-local-output
+- version
+- print-stats
+
+Use `command -h` for seeing the helper of each command.'
+
+# Where to find the files. Can be customized for debugging.
+LIB_DIR="${DAILY_BACKUP_LIB_DIR:-/usr/lib/daily-backup/}"
+
+# Parses the command name
+COMMAND="$1"
+shift
+
+case "$COMMAND" in
+    run)
+        "${LIB_DIR}"daily-backup-run "$@"
+        ;;
+
+    launch)
+        "${LIB_DIR}"daily-backup-launch "$@"
+        ;;
+
+    send-email)
+        "${LIB_DIR}"daily-backup-send-email "$@"
+        ;;
+
+    upload)
+        "${LIB_DIR}"daily-backup-upload "$@"
+        ;;
+
+    upload-backblaze-b2)
+        "${LIB_DIR}"daily-backup-upload-backblaze-b2.py "$@"
+        ;;
+
+    cleanup-local-output)
+        "${LIB_DIR}"daily-backup-cleanup-local-output "$@"
+        ;;
+
+    version)
+        "${LIB_DIR}"daily-backup-version "$@"
+        ;;
+
+    print-stats)
+        "${LIB_DIR}"daily-backup-print-stats "$@"
+        ;;
+
+    *)
+        { echo "ERROR: Unkown command $COMMAND" ; echo "$USAGE" ; } 1>&2
+        exit 1
+        ;;
+esac
