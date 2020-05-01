@@ -64,7 +64,13 @@ do
     fi
 done
 
+# Setup
+TMPFILE="$(mktemp daily-backup-send-email.logfile.XXXXXXXXXX.tar.gz)"
+function rm_tmp_dir() { rm -rf $TMPFILE ; }
+trap rm_tmp_dir EXIT
+
 # Helper functions
+function exit_with_err() { echo "Exitting with error" >&2 ; exit 2 ; }
 function print_stats_from_log() {
     sed -rn '/===== BEGIN STATS =====/,/===== END STATS =====/ p' "$1"
 }
@@ -73,8 +79,17 @@ function text() {
     echo -e "$(subject)\n\nSee attached file for the tar log, and below for some stats :)\n\n"
     print_stats_from_log "$LOGFILE"
 }
+function compress_logfile() {
+    local dir="$(dirname "$LOGFILE")"
+    local file="$(basename "$LOGFILE")"
+    tar --directory "${dir}" -czf "${TMPFILE}" "${file}"
+}
 
 # Script
+echo "Compressing log file..."
+compress_logfile || exit_with_err
+
+
 echo "Sending email..."
 SUCCESS="0"
 ATTEMPT='1'
@@ -87,7 +102,7 @@ do
            -F "to=$TO_EMAIL" \
            -F "subject=$(subject)" \
            -F "text=$(text)" \
-           -F "attachment=@${LOGFILE}" \
+           -F "attachment=@${TMPFILE}" \
            "https://api.mailgun.net/v3/${DAILY_BACKUP_MAILGUN_DOMAIN}/messages"
     then
         SUCCESS='1'
