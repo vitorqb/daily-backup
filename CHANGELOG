@@ -9,11 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+## [1.1.1] - 2020-05-09
+
+### Fix
+
+- Fixes bug when waiting for a new attempt to upload using backblaze (incorrect usage o sleep)
+
 ## [1.1.0] - 2020-05-01
 
 ### Added
 
-- __Compress the log file before sending it by email__.  
+- __Compress the log file before sending it by email__.
   Because `mailgun` has a 25Mb limit on size, we now compress the file with tar and
   gzip before sending it by email.
 
@@ -26,9 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changes
 
 - (__BREAKING__) The files are now stores with a `DAILY_BACKUP__` prefix. This means
-  that if before we had `2020-04-23T07:58:03.tar.gz.gpg` now we have 
+  that if before we had `2020-04-23T07:58:03.tar.gz.gpg` now we have
   `DAILY_BACKUP__2020-04-23T07:58:03.tar.gz.gpg`.
-	
+
 ## [0.3.0] - 2020-02-11
 
 ### Added
@@ -44,3 +50,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.3.0]: https://github.com/vitorqb/daily-backup/releases/tag/v0.3.0
 [1.0.0]: https://github.com/vitorqb/daily-backup/releases/tag/v1.0.0
 [1.1.0]: https://github.com/vitorqb/daily-backup/releases/tag/v1.1.0
+[1.1.1]: https://github.com/vitorqb/daily-backup/releases/tag/v1.1.1
