@@ -12,6 +12,7 @@ import os
 import sys
 import datetime
 import re
+import time
 
 # Globals
 DAILY_BACKUP_B2_API_KEY = os.environ['DAILY_BACKUP_B2_API_KEY']
@@ -64,4 +65,4 @@ if __name__ == "__main__":
             print("FAILED WITH EXCEPTION:", flush=True)
             print(e, flush=True)
             print(f"TRYING AGAIN IN {args.wait_between} SECOND", flush=True)
-            sleep(args.wait_between)
+            time.sleep(args.wait_between)
