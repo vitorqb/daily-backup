@@ -9,6 +9,7 @@ Command can be one of:
 - upload
 - upload-backblaze-b2
 - cleanup-local-output
+- cleanup-remote-backblaze-b2
 - version
 - print-stats
 
@@ -44,6 +45,10 @@ case "$COMMAND" in
 
     cleanup-local-output)
         "${LIB_DIR}"daily-backup-cleanup-local-output "$@"
+        ;;
+
+    cleanup-remote-backblaze-b2)
+        "${LIB_DIR}"daily-backup-cleanup-remote-backblaze-b2.py "$@"
         ;;
 
     version)

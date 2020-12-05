@@ -57,6 +57,27 @@ function run_local_cleanup() {
         -n "$DAILY_BACKUP_LOCAL_NUM_OF_FILES_TO_KEEP"
 }
 
+# Runs the remote cleanup
+function run_remote_cleanup() {
+    echo -e "\n=> Cleaning remote output...\n"
+    case "$DAILY_BACKUP_UPLOAD_TYPE" in
+        scp)
+            echo "NOT YET IMPLEMENTED" >/dev/stderr
+            exit 1
+            ;;
+        b2)
+            $DAILY_BACKUP \
+                cleanup-remote-backblaze-b2 \
+                -b "$DAILY_BACKUP_B2_BUCKET_NAME" \
+                -n "$DAILY_BACKUP_REMOTE_NUM_OF_FILES_TO_KEEP"
+            ;;
+        *)
+            echo "UNKOWN BACKUP TYPE"
+            exit 1
+            ;;
+    esac
+}
+
 # Sends the email on completion
 function send_email() {
     echo -e "\n=> Sending email...\n"
@@ -151,5 +172,9 @@ run_upload || exit_with_err
 if [ "$DAILY_BACKUP_SHOULD_CLEANUP_LOCAL_FOLDER" = 1 ]
 then
     run_local_cleanup || exit_with_err
+fi
+if [ "$DAILY_BACKUP_SHOULD_CLEANUP_REMOTE" = 1 ]
+then
+    run_remote_cleanup || exit_with_err
 fi
 send_email || exit_with_err

@@ -170,6 +170,18 @@ sudo systemctl start daily-backup && sudo journalctl --unit daily-backup --follo
      Example: if set to 10, we keep the 10 most recent backup files every time
      the cleanup is run.
 
+   - *DAILY_BACKUP_SHOULD_CLEANUP_REMOTE*
+     
+     If set to "1", cleans old backups from the remote storage. The number
+     of backup files to keep is controlled by DAILY_BACKUP_REMOTE_NUM_OF_FILES_TO_KEEP.
+
+   - *DAILY_BACKUP_REMOTE_NUM_OF_FILES_TO_KEEP*
+
+     The number of local backups to keep for the remote backup
+     storage.. Only has effect if
+     DAILY_BACKUP_SHOULD_CLEANUP_REMOTE=1. A cleanup job is run after
+     each successfull upload.
+
    - *DAILY_BACKUP_EMAIL_TO*
 
      An email address that will receive an email everytime the backup is run.

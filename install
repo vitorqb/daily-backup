@@ -44,6 +44,7 @@ install -D "bash/daily-backup-version" "$PREFIX/usr/lib/daily-backup/daily-backu
 install -D "bash/daily-backup-print-stats" "$PREFIX/usr/lib/daily-backup/daily-backup-print-stats"
 install -D "bash/daily-backup-cleanup-local-output" "$PREFIX/usr/lib/daily-backup/daily-backup-cleanup-local-output"
 install -D "python/daily-backup-upload-backblaze-b2.py" "$PREFIX/usr/lib/daily-backup/daily-backup-upload-backblaze-b2.py"
+install -D "python/daily-backup-cleanup-remote-backblaze-b2.py" "$PREFIX/usr/lib/daily-backup/daily-backup-cleanup-remote-backblaze-b2.py"
 
 
 # Systemd templates
