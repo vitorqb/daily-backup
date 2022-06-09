@@ -1,0 +1,112 @@
+#!/bin/bash
+USAGE="$0"' -f FILE -d DEST_ID [-c GDRIVE_CONFIG] [-w WAIT_BETWEEN] [-m MAX_RETIRES]
+Uploads the daily-backup to google-drive using gdrive.
+NOTE: Assumes that the 
+
+-f FILE)
+  The file to upload.
+
+-d DEST_ID)
+  The ID of the destination folder inside google drive. See `gdrive list --absolute`.
+
+-w WAIT_BETWEEN)
+  Time to wait between attempts
+
+-m MAX_RETRIES)
+  Maximum number of retries
+
+-c GDRIVE_CONFIG)
+  Configuration file for gdrive (see -c in `gdrive help upload`).
+'
+
+# Defaults
+WAIT_BETWEEN=30
+MAX_RETIRES=100
+
+# Parse
+SHORT='hf:d:w:m:c:'
+OPTS="$(getopt --options $SHORT --name "$0" -- "$@")"
+! [ "$?" = 0 ] && echo "$USAGE" 1>&2 && exit 1
+eval set -- "$OPTS"
+while [[ "$#" -gt 0 ]]
+do
+    case "$1" in
+        -f)
+            FILE="$2"
+            shift
+            shift
+            ;;
+        -d)
+            DEST_ID="$2"
+            shift
+            shift
+            ;;
+        -c)
+            GDRIVE_CONFIG="$2"
+            shift
+            shift
+            ;;
+        -w)
+            WAIT_BETWEEN="$2"
+            shift
+            shift
+            ;;
+        -m)
+            MAX_RETIRES="$2"
+            shift
+            shift
+            ;;
+        --)
+            shift
+            ;;
+        *)
+            echo "ERROR: Uknown argument $1" >&2
+            echo "$USAGE" 1>&2
+            exit 1
+    esac
+done
+
+# Checks
+if [ -z "$FILE" ]
+then
+    echo "ERROR: Missing file!" >&2
+    echo "USAGE" >&2
+    exit 1
+fi
+
+if [ -z "$DEST_ID" ]
+then
+    echo "ERROR: Missing destination folder ID!" >&2
+    echo "USAGE" >&2
+    exit 1
+fi
+
+# Script
+cmd=( gdrive )
+if ! [ -z "$GDRIVE_CONFIG" ]
+then
+    cmd+=( -c "$GDRIVE_CONFIG" )
+fi
+cmd+=( upload -p "$DEST_ID" "$FILE" )
+
+COUNTER="1"
+SUCCESS="0"
+
+while [ "$SUCCESS" = "0" ]
+do
+    echo "Attempt: $COUNTER"
+    echo "Running ${cmd[@]}"
+    ${cmd[@]}
+    if [ "$?" == "0" ]
+    then
+        SUCCESS=1
+    elif [[ "$COUNTER" -ge "$MAX_RETIRES" ]]
+    then
+         echo "Max attempts reached!" 1>&2
+         exit 1
+    else
+        echo "Failed! Sleeping..."
+        COUNTER="$((COUNTER+1))"
+        sleep "$WAIT_BETWEEN"
+    fi
+done

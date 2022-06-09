@@ -8,21 +8,22 @@
    The functionality is splitted into three main tasks:
    1. *Create a password encrypted backup file* using tar and gpg.
    2. *Upload* the created backup file to some remote destination
-      (using either scp or [[https://www.backblaze.com][backblaze]]).
+      (using either scp, [[https://www.backblaze.com][backblaze]]) or [[https://github.com/prasmussen/gdrive][gdrive]]).
    3. *Send an email* to the user to let him know the script finished.
 
    We use *systemd services and timers* to run the script daily.
 
    Here are the programs/dependencies used:
 
-   | Name           | Description                                           | Notes              |
-   |----------------+-------------------------------------------------------+--------------------|
-   | tar            | Used to created compressed backup file.               |                    |
-   | gpg            | Used to encrypt the backup file with a password.      |                    |
-   | scp            | Used to upload the backup file to a remote server.    | or python3 + b2sdk |
-   | python3+b2sdk  | Used to upload the backup file to a backblaze bucket. | or scp             |
-   | curl + mailgun | Used to send an email after the backup is completed.  |                    |
-   | systemd        | Uses timers and services to run the backup daily.     |                    |
+   | Name           | Description                                           | Notes    |
+   |----------------+-------------------------------------------------------+----------|
+   | tar            | Used to created compressed backup file.               |          |
+   | gpg            | Used to encrypt the backup file with a password.      |          |
+   | scp            | Used to upload the backup file to a remote server.    | optional |
+   | python3+b2sdk  | Used to upload the backup file to a backblaze bucket. | optional |
+   | curl + mailgun | Used to send an email after the backup is completed.  |          |
+   | systemd        | Uses timers and services to run the backup daily.     |          |
+   | gdrive         | Used to upload the backup to a Google Drive account   | optional |
 
 ** Installing
 
@@ -220,3 +221,11 @@ sudo systemctl start daily-backup && sudo journalctl --unit daily-backup --follo
    - *DAILY_BACKUP_B2_BUCKET_NAME* (DAILY_BAKCUP_UPLOAD_TYPE="b2")
 
      Name of the bucket where the generated backup will be stored.
+
+   - *DAILY_BACKUP_GDRIVE_DEST_ID* (DAILY_BAKCUP_UPLOAD_TYPE="gdrive")
+
+     The ID of the directory where to upload backups. See `gdrive list --absolute`.
+
+   - *DAILY_BACKUP_GDRIVE_CONFIG* (DAILY_BAKCUP_UPLOAD_TYPE="gdrive")
+
+     The configuration file to give to gdrive (`-c` option in `gdrive help upload`)

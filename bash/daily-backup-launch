@@ -36,6 +36,12 @@ function run_upload_b2() {
     $DAILY_BACKUP upload-backblaze-b2 -f="$OUTPUT" -b="$DAILY_BACKUP_B2_BUCKET_NAME"
 }
 
+# Uploads the backup using gdrive
+function run_upload_gdrive() {
+    echo -e "\n=> Uploading using gdrive...\n"
+    $DAILY_BACKUP upload-gdrive -f "$OUTPUT" -d "$DAILY_BACKUP_GDRIVE_DEST_ID" -c "$DAILY_BACKUP_GDRIVE_CONFIG"
+}
+
 # Uploads the backup dispatching on DAILY_BACKUP_UPLOAD_TYPE
 function run_upload() {
     case "$DAILY_BACKUP_UPLOAD_TYPE" in
@@ -45,6 +51,12 @@ function run_upload() {
         b2)
             run_upload_b2
             ;;
+        gdrive)
+            run_upload_gdrive
+            ;;
+        *)
+            echo "ERROR: Invalid upload type $DAILY_BACKUP_UPLOAD_TYPE" >&2
+            exit 1
     esac
 }
 
@@ -70,6 +82,10 @@ function run_remote_cleanup() {
                 cleanup-remote-backblaze-b2 \
                 -b "$DAILY_BACKUP_B2_BUCKET_NAME" \
                 -n "$DAILY_BACKUP_REMOTE_NUM_OF_FILES_TO_KEEP"
+            ;;
+        gdrive)
+            echo "NOT YET IMPLEMENTED" >&2
+            exit 1
             ;;
         *)
             echo "UNKOWN BACKUP TYPE"
@@ -112,12 +128,19 @@ B2_VARS=(
     DAILY_BACKUP_B2_BUCKET_NAME
 )
 
+GDRIVE_VARS=(
+    DAILY_BACKUP_GDRIVE_DEST_ID
+)
+
 case "$DAILY_BACKUP_UPLOAD_TYPE" in
     scp)
         VARS=("${COMMON_VARS[@]} ${SCP_VARS[@]}")
         ;;
     b2)
-        VARS=("${COMMON_VARS[@]} ${B@_VARS[@]}")
+        VARS=("${COMMON_VARS[@]} ${B2_VARS[@]}")
+        ;;
+    gdrive)
+        VARS=("${COMMON_VARS[@]} ${GDRIVE_VARS[@]}")
         ;;
     *)
         { echo "ERROR: Invalid upload type" ; echo "$USAGE" ; } 1>&2

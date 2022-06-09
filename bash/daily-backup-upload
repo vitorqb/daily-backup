@@ -57,5 +57,3 @@ do
         sleep "$WAIT_BETWEEN"
     fi
 done
-
-        

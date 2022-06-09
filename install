@@ -38,6 +38,7 @@ set -e
 install -D "bash/daily-backup" "$PREFIX/usr/bin/daily-backup"
 install -D "bash/daily-backup-run" "$PREFIX/usr/lib/daily-backup/daily-backup-run"
 install -D "bash/daily-backup-upload" "$PREFIX/usr/lib/daily-backup/daily-backup-upload"
+install -D "bash/daily-backup-upload-gdrive" "$PREFIX/usr/lib/daily-backup/daily-backup-upload-gdrive"
 install -D "bash/daily-backup-launch" "$PREFIX/usr/lib/daily-backup/daily-backup-launch"
 install -D "bash/daily-backup-send-email" "$PREFIX/usr/lib/daily-backup/daily-backup-send-email"
 install -D "bash/daily-backup-version" "$PREFIX/usr/lib/daily-backup/daily-backup-version"

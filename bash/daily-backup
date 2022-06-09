@@ -8,6 +8,7 @@ Command can be one of:
 - send-email
 - upload
 - upload-backblaze-b2
+- upload-gdrive
 - cleanup-local-output
 - cleanup-remote-backblaze-b2
 - version
@@ -41,6 +42,10 @@ case "$COMMAND" in
 
     upload-backblaze-b2)
         "${LIB_DIR}"daily-backup-upload-backblaze-b2.py "$@"
+        ;;
+
+    upload-gdrive)
+        "${LIB_DIR}"daily-backup-upload-gdrive "$@"
         ;;
 
     cleanup-local-output)

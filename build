@@ -1,0 +1,8 @@
+#!/bin/bash
+DEST_DIR=${DEST_DIR:-"./dest"}
+
+
+VERSION=$(git describe --tags | tr -d '\n')
+rm -rf "$DEST_DIR"
+mkdir -p "$DEST_DIR"
+tar -vzcf "./dest/daily-backup-$VERSION.tar.gz" --exclude=./dest ./*
