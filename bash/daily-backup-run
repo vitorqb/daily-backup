@@ -100,7 +100,7 @@ mkdir -p "$(dirname "$TAR_LOG_FILE")"
 # Runs tar and gpg. Note: We can't really stop on errors here. Tar may
 # fail for a single file, but we still want the backup.
 echo "Running tar..."
-set +e; tar --checkpoint=10000 --index-file=$TAR_LOG_FILE -vzcf $TMPFILE --exclude-from $EXCLUDE_FROM --files-from $FILES_FROM; set -e
+set +e; tar --dereference --checkpoint=10000 --index-file=$TAR_LOG_FILE -vzcf $TMPFILE --exclude-from $EXCLUDE_FROM --files-from $FILES_FROM; set -e
 
 echo "Running gpg..."
 echo "$DAILY_BACKUP_PASSWORD" | gpg --output $OUTPUT --batch --yes --passphrase-fd 0 -c $TMPFILE
